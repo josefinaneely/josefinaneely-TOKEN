@@ -16,7 +16,7 @@ export function Signup() {
             const response = await fetch(`${backendUrl}/api/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: email, password }),
+                body: JSON.stringify({ username: email, password: password }),
             });
 
             const data = await response.json();
@@ -58,7 +58,8 @@ export function Signup() {
                         style={{ width: "100%", padding: 8, borderRadius: 5, border: "1px solid #ccc" }}
                     />
                 </div>
-                <button type="submit" style={{ width: "100%", padding: 10, background: "#007bff", color: "#fff", border: "none", borderRadius: 5, fontSize: "1rem", cursor: "pointer" }}>
+                <button type="submit"
+                    style={{ width: "100%", padding: 10, background: "#007bff", color: "#fff", border: "none", borderRadius: 5, fontSize: "1rem", cursor: "pointer" }}>
                     Enviar
                 </button>
             </form>
