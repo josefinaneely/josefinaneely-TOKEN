@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function Signup() {
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
@@ -13,10 +14,10 @@ export function Signup() {
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || "";
-            const response = await fetch(`${backendUrl}/api/signup`, {
+            const response = await fetch("https://fuzzy-space-halibut-4j67xxq4wr69hqw46-3001.app.github.dev/api/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: email, password: password }),
+                body: JSON.stringify({ username, email, password }),
             });
 
             const data = await response.json();
@@ -25,7 +26,7 @@ export function Signup() {
                 setMessage("Usuario registrado exitosamente. Redirigiendo...");
                 setTimeout(() => {
                     navigate("/login");
-                }, 1000); // Redirige después de 1 segundo
+                }, 1000);
             } else {
                 setMessage(data.msg || "Error al registrar usuario.");
             }
@@ -38,6 +39,16 @@ export function Signup() {
         <div style={{ maxWidth: 350, margin: "60px auto", padding: 24, background: "#fff", borderRadius: 10, boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
             <h1>Registro</h1>
             <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: 18 }}>
+                    <label>Nombre de usuario:</label>
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={e => setUsername(e.target.value)}
+                        required
+                        style={{ width: "100%", padding: 8, borderRadius: 5, border: "1px solid #ccc" }}
+                    />
+                </div>
                 <div style={{ marginBottom: 18 }}>
                     <label>Correo electrónico:</label>
                     <input

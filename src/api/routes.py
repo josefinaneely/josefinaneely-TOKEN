@@ -7,6 +7,7 @@ from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from api.admin import setup_admin
+from werkzeug.security import check_password_hash, generate_password_hash
 
 api = Blueprint('api', __name__)
 
@@ -24,33 +25,37 @@ def handle_hello():
 
 @api.route("/signup", methods=['POST'])
 def signup():
+    email = request.json.get("email", None)
     username = request.json.get("username", None)
     password = request.json.get("password", None)
 
-    if not username or not password:
-        return jsonify({"msg": "Username and password are required"}), 400
+    if not username or not password or not email:
+        return jsonify({"msg": "Username, email and password are required"}), 400
 
-    existing_user = User.query.filter_by(username=username).first()
+    existing_user = User.query.filter(
+        (User.username == username) | (User.email == email)).first()
     if existing_user:
         return jsonify({"msg": "User already exists"}), 409
 
-    new_user = User(username=username, password=password)
+    hashed_password = generate_password_hash(password)
+    new_user = User(username=username, email=email, password=hashed_password)
+
     db.session.add(new_user)
     db.session.commit()
+
     return jsonify({"msg": "User created successfully", "user_id": new_user.id}), 201
 
 
 @api.route("/login", methods=["POST"])
 def login():
-    username = request.json.get("username", None)
+    email = request.json.get("email", None)
     password = request.json.get("password", None)
+    if not email or not password:
+        return jsonify({"msg": "Email and password required"}), 400
 
-    if not username or not password:
-        return jsonify({"msg": "Username and password required"}), 400
-
-    user = User.query.filter_by(username=username, password=password).first()
-    if not user:
-        return jsonify({"msg": "Bad username or password"}), 401
+    user = User.query.filter_by(email=email).first()
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({"msg": "Bad email or password"}), 401
 
     access_token = create_access_token(identity=user.id)
     return jsonify({"token": access_token, "user_id": user.id}), 200
@@ -75,3 +80,12 @@ def create_token():
 
     access_token = create_access_token(identity=user.id)
     return jsonify({"token": access_token, "user_id": user.id}), 200
+
+
+@api.route("/user/<int:user_id>", methods=["GET"])
+@jwt_required()
+def get_user_profile(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"msg": "Usuario no encontrado"}), 404
+    return jsonify(user.serialize()), 200
